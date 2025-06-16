@@ -1,0 +1,32 @@
+### User Signup
+POST http://localhost:3011/api/users/signup
+Content-Type: application/json
+
+{
+    "email": "test@example.com",
+    "password": "Password123!",
+    "name": "Test User"
+}
+
+### User Login
+POST http://localhost:3011/api/users/login
+Content-Type: application/json
+
+{
+    "email": "test@example.com",
+    "password": "Password123!"
+}
+
+### Create Room (Protected Route - Requires Auth Token)
+POST http://localhost:3011/api/users/rooms
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImVlOTdhMzRlLTQ2ZDktNDA2Yy04NWJkLTUzZmE2ZmUyODQ0YyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImlhdCI6MTc1MDA3NDMwMSwiZXhwIjoxNzUwMTYwNzAxfQ.k-WcUx-rnlCeP8jqoVQRf169qjw1eiRjEG06l90o4bc
+
+{
+    "name": "My Drawing Room",
+    "description": "A room for collaborative drawing"
+}
+
+### Get User Profile (Protected Route)
+GET http://localhost:3011/api/users/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImVlOTdhMzRlLTQ2ZDktNDA2Yy04NWJkLTUzZmE2ZmUyODQ0YyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImlhdCI6MTc1MDA3NDMwMSwiZXhwIjoxNzUwMTYwNzAxfQ.k-WcUx-rnlCeP8jqoVQRf169qjw1eiRjEG06l90o4bc
