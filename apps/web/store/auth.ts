@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { authApi } from '../lib/api';
+import { create } from "zustand";
+import { authApi } from "../lib/api";
 
 interface User {
   id: string;
@@ -19,25 +19,25 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  token: typeof window !== 'undefined' ? localStorage.getItem('token') : null,
+  token: typeof window !== "undefined" ? localStorage.getItem("token") : null,
   isAuthenticated: false,
 
   login: async (email: string, password: string) => {
     const response = await authApi.login({ email, password });
     const { token, user } = response.data.data;
-    localStorage.setItem('token', token);
+    localStorage.setItem("token", token);
     set({ user, token, isAuthenticated: true });
   },
 
   signup: async (email: string, password: string, name: string) => {
     const response = await authApi.signup({ email, password, name });
     const { token, user } = response.data.data;
-    localStorage.setItem('token', token);
+    localStorage.setItem("token", token);
     set({ user, token, isAuthenticated: true });
   },
 
   logout: () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
     set({ user: null, token: null, isAuthenticated: false });
   },
 

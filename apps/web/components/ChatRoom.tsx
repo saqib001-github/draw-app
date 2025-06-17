@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
-import { roomApi } from '../lib/api';
-import { useAuthStore } from '../store/auth';
+import { useEffect, useState } from "react";
+import { io, Socket } from "socket.io-client";
+import { roomApi } from "../lib/api";
+import { useAuthStore } from "../store/auth";
 
 interface Message {
   id: string;
@@ -18,7 +18,7 @@ interface ChatRoomProps {
 
 export function ChatRoom({ roomId, slug }: ChatRoomProps) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
   const [socket, setSocket] = useState<Socket | null>(null);
   const { user } = useAuthStore();
 
@@ -29,27 +29,27 @@ export function ChatRoom({ roomId, slug }: ChatRoomProps) {
         const response = await roomApi.getChats(roomId);
         setMessages(response.data.data);
       } catch (error) {
-        console.error('Error loading messages:', error);
+        console.error("Error loading messages:", error);
       }
     };
     loadMessages();
 
     // Connect to WebSocket
-    const token = localStorage.getItem('token');
-    const newSocket = io('http://localhost:4000', {
+    const token = localStorage.getItem("token");
+    const newSocket = io("http://localhost:4000", {
       query: { token },
     });
 
-    newSocket.emit('join', { roomId });
+    newSocket.emit("join", { roomId });
 
-    newSocket.on('message', (message: Message) => {
+    newSocket.on("message", (message: Message) => {
       setMessages((prev) => [...prev, message]);
     });
 
     setSocket(newSocket);
 
     return () => {
-      newSocket.emit('leave', { roomId });
+      newSocket.emit("leave", { roomId });
       newSocket.disconnect();
     };
   }, [roomId]);
@@ -59,15 +59,15 @@ export function ChatRoom({ roomId, slug }: ChatRoomProps) {
     if (!socket || !newMessage.trim() || !user) return;
 
     const message = {
-      type: 'chat',
+      type: "chat",
       content: newMessage,
       roomId,
       userId: user.id,
       userName: user.name,
     };
 
-    socket.emit('message', message);
-    setNewMessage('');
+    socket.emit("message", message);
+    setNewMessage("");
   };
 
   return (
@@ -77,18 +77,18 @@ export function ChatRoom({ roomId, slug }: ChatRoomProps) {
           <div
             key={message.id}
             className={`flex ${
-              message.userId === user?.id ? 'justify-end' : 'justify-start'
+              message.userId === user?.id ? "justify-end" : "justify-start"
             }`}
           >
             <div
               className={`max-w-sm rounded-lg px-4 py-2 ${
                 message.userId === user?.id
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200'
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200"
               }`}
             >
               <div className="font-bold text-sm">
-                {message.userId === user?.id ? 'You' : message.userName}
+                {message.userId === user?.id ? "You" : message.userName}
               </div>
               <div>{message.content}</div>
               <div className="text-xs opacity-75">
