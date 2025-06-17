@@ -21,7 +21,7 @@ export class UserService {
 
     const token = generateJwtToken(
       { id: user.id, email: user.email, name: user.name },
-      process.env.JWT_SECRET!,
+      process.env.JWT_SECRET!
     );
 
     return { user, token };
@@ -40,7 +40,7 @@ export class UserService {
 
     const token = generateJwtToken(
       { id: user.id, email: user.email, name: user.name },
-      process.env.JWT_SECRET!,
+      process.env.JWT_SECRET!
     );
 
     return { user, token };
@@ -93,5 +93,25 @@ export class UserService {
     }
 
     return room;
+  }
+
+  static async getRoomChats(roomId: string) {
+    const chats = await prisma.chat.findMany({
+      where: { roomId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    return chats;
   }
 }
