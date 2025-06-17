@@ -48,4 +48,18 @@ export class UserController {
       status: 200,
     });
   }
+  
+  static async getRoomBySlug(req: Request, res: Response) {
+    const { slug } = req.params;
+    if (!slug) {
+      throw new Error("Room slug is required");
+    }
+    const room = await UserService.getRoomBySlug(slug);
+
+    return sendResponse(res, {
+      message: "Room retrieved successfully",
+      data: room,
+      status: 200,
+    });
+  }
 }
