@@ -1,13 +1,12 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import prisma from "@repo/database";
-import { generateJwtToken } from "@repo/common";
+import { generateJwtToken, NotFoundError, ValidationError } from "@repo/common";
 
 export class UserService {
   static async signup(email: string, password: string, name?: string) {
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      throw new Error("User already exists");
+      throw new ValidationError("User already exists");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -30,7 +29,7 @@ export class UserService {
   static async login(email: string, password: string) {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      throw new Error("Invalid credentials");
+      throw new ValidationError("Invalid credentials");
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password);
@@ -47,6 +46,7 @@ export class UserService {
   }
 
   static async createRoom(userId: string, name: string, description?: string) {
+    // do not fetch password
     return prisma.room.create({
       data: {
         name,
@@ -73,7 +73,7 @@ export class UserService {
     });
 
     if (!user) {
-      throw new Error("User not found");
+      throw new NotFoundError("User not found");
     }
 
     return user;
@@ -89,7 +89,7 @@ export class UserService {
     });
 
     if (!room) {
-      throw new Error("Room not found");
+      throw new NotFoundError("Room not found");
     }
 
     return room;
