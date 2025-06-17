@@ -34,3 +34,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImVlOTdhMzRlL
 ### Get Room by slug
 GET http://localhost:3011/api/users/room/my-drawing-room
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImVlOTdhMzRlLTQ2ZDktNDA2Yy04NWJkLTUzZmE2ZmUyODQ0YyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImlhdCI6MTc1MDA3NDMwMSwiZXhwIjoxNzUwMTYwNzAxfQ.k-WcUx-rnlCeP8jqoVQRf169qjw1eiRjEG06l90o4bc
+
+### Get Room Chats (Protected Route)
+GET http://localhost:3000/api/users/rooms/111/chats
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImVlOTdhMzRlLTQ2ZDktNDA2Yy04NWJkLTUzZmE2ZmUyODQ0YyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImlhdCI6MTc1MDA3NDMwMSwiZXhwIjoxNzUwMTYwNzAxfQ.k-WcUx-rnlCeP8jqoVQRf169qjw1eiRjEG06l90o4bc

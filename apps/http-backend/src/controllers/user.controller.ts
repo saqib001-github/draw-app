@@ -48,7 +48,7 @@ export class UserController {
       status: 200,
     });
   }
-  
+
   static async getRoomBySlug(req: Request, res: Response) {
     const { slug } = req.params;
     if (!slug) {
@@ -59,6 +59,20 @@ export class UserController {
     return sendResponse(res, {
       message: "Room retrieved successfully",
       data: room,
+      status: 200,
+    });
+  }
+
+  static async getRoomChats(req: Request, res: Response) {
+    const { roomId } = req.params;
+    if (!roomId) {
+      throw new Error("Room ID is required");
+    }
+    const chats = await UserService.getRoomChats(roomId);
+
+    return sendResponse(res, {
+      message: "Room chats retrieved successfully",
+      data: chats,
       status: 200,
     });
   }

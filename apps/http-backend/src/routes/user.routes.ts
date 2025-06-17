@@ -36,4 +36,10 @@ router.get(
 
 router.get("/me", authenticate, wrapAsync(UserController.userProfile));
 
+router.get(
+  "/rooms/:roomId/chats",
+  authenticate,
+  wrapAsync(UserController.getRoomChats)
+);
+
 export default router;
