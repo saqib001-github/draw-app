@@ -49,7 +49,7 @@ class WebSocketManager {
   private initialize(): void {
     this.wss.on("connection", this.handleConnection.bind(this));
     console.log(
-      `WebSocket Server running on port ${process.env.WS_PORT || 4000}`,
+      `WebSocket Server running on port ${process.env.WS_PORT || 4000}`
     );
   }
 
@@ -71,19 +71,32 @@ class WebSocketManager {
 
   private async handleConnection(
     ws: AuthenticatedClient,
-    req: any,
+    req: any
   ): Promise<void> {
     try {
       const { query } = parse(req.url || "", true);
       const token = query.token as string;
 
+      console.log("[WS] New connection attempt", {
+        url: req.url,
+        hasToken: !!token,
+      });
+
       if (!token) {
+        console.log("[WS] Connection rejected: No token provided");
         ws.close(1008, "Authentication failed - No token provided");
         return;
       }
 
       const user = this.checkUser(token);
+      console.log("[WS] User authentication result:", {
+        authenticated: !!user,
+        userId: user?.id,
+        userName: user?.name,
+      });
+
       if (!user) {
+        console.log("[WS] Connection rejected: Invalid token");
         ws.close(1008, "Authentication failed - Invalid token");
         return;
       }
@@ -93,12 +106,24 @@ class WebSocketManager {
       ws.userName = user.name;
       ws.roomId = null;
 
+      console.log("[WS] Client successfully connected:", {
+        userId: ws.userId,
+        userName: ws.userName,
+      });
+
       // Store user
       this.users.set(user.id, user);
 
       // Set up message handler
       ws.on("message", (data: string) => this.handleMessage(ws, data));
-      ws.on("close", () => this.handleDisconnection(ws));
+      ws.on("close", () => {
+        console.log("[WS] Client disconnecting:", {
+          userId: ws.userId,
+          userName: ws.userName,
+          wasInRoom: ws.roomId,
+        });
+        this.handleDisconnection(ws);
+      });
 
       // Send initial state
       this.sendToClient(ws, {
@@ -110,7 +135,7 @@ class WebSocketManager {
         timestamp: new Date(),
       });
     } catch (error) {
-      console.error("Connection error:", error);
+      console.error("[WS] Connection error:", error);
       ws.close(1008, "Internal server error");
     }
   }
