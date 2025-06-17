@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { AnyZodObject } from "zod";
-import jwt from "jsonwebtoken";
 import { verifyJwtToken } from "./jwt-utility";
+import { sendResponse } from "./response";
+import { ValidationError } from "./errors";
 export const validateSchema = (schema: AnyZodObject) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -25,7 +26,7 @@ export const authenticate = async (
   try {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
-      throw new Error("Authentication token missing");
+      throw new ValidationError("Authentication token missing");
     }
 
     const decoded = verifyJwtToken(token, process.env.JWT_SECRET as string);
@@ -37,33 +38,15 @@ export const authenticate = async (
 };
 
 export const handleErrors = (
-  err: Error,
+  err: any,
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   console.error(err.stack);
 
-  if (err instanceof SyntaxError) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid JSON payload",
-      status: 400,
-    });
-  }
-
-  if (err.name === "ZodError") {
-    return res.status(400).json({
-      success: false,
-      message: "Validation error",
-      errors: err,
-      status: 400,
-    });
-  }
-
-  return res.status(500).json({
-    success: false,
-    message: "Internal server error",
-    status: 500,
+  return sendResponse(res, {
+    status: err.status || 500,
+    message: err.message || "Internal Server Error",
   });
 };
