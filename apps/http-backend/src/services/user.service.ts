@@ -51,6 +51,7 @@ export class UserService {
       data: {
         name,
         description,
+        slug: name.toLowerCase().replace(/\s+/g, "-"),
         ownerId: userId,
         participants: {
           connect: { id: userId },
@@ -76,5 +77,21 @@ export class UserService {
     }
 
     return user;
+  }
+
+  static async getRoomBySlug(slug: string) {
+    const room = await prisma.room.findUnique({
+      where: { slug },
+      include: {
+        owner: true,
+        participants: true,
+      },
+    });
+
+    if (!room) {
+      throw new Error("Room not found");
+    }
+
+    return room;
   }
 }

@@ -12,20 +12,26 @@ const router: Router = Router();
 router.post(
   "/signup",
   validateSchema(signupSchema),
-  wrapAsync(UserController.signup),
+  wrapAsync(UserController.signup)
 );
 
 router.post(
   "/login",
   validateSchema(loginSchema),
-  wrapAsync(UserController.login),
+  wrapAsync(UserController.login)
 );
 
 router.post(
-  "/rooms",
+  "/room",
   authenticate,
   validateSchema(createRoomSchema),
-  wrapAsync(UserController.createRoom),
+  wrapAsync(UserController.createRoom)
+);
+
+router.get(
+  "/room/:slug",
+  authenticate,
+  wrapAsync(UserController.getRoomBySlug)
 );
 
 router.get("/me", authenticate, wrapAsync(UserController.userProfile));
