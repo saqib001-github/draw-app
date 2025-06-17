@@ -94,10 +94,10 @@ export class UserService {
 
     return room;
   }
-
   static async getRoomChats(roomId: string) {
     const chats = await prisma.chat.findMany({
       where: { roomId },
+      take: 50,
       include: {
         user: {
           select: {
