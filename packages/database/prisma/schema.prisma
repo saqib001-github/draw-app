@@ -10,28 +10,30 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  rooms     Room[]   @relation("RoomParticipants")
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  name       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  rooms      Room[]   @relation("RoomParticipants")
   ownedRooms Room[]
-  chats     Chat[]
+  chats      Chat[]
+  Stroke     Stroke[]
 }
 
 model Room {
-  id          String   @id @default(uuid())
-  name        String
-  slug        String   @unique
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  ownerId     String
-  owner       User     @relation(fields: [ownerId], references: [id])
-  participants User[]  @relation("RoomParticipants")
-  chats       Chat[]
+  id           String   @id @default(uuid())
+  name         String
+  slug         String   @unique
+  description  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  ownerId      String
+  owner        User     @relation(fields: [ownerId], references: [id])
+  participants User[]   @relation("RoomParticipants")
+  chats        Chat[]
+  strokes      Stroke[]
 }
 
 model Chat {
@@ -43,4 +45,21 @@ model Chat {
   updatedAt DateTime @updatedAt
   room      Room     @relation(fields: [roomId], references: [id])
   user      User     @relation(fields: [userId], references: [id])
+}
+
+model Stroke {
+  id         String   @id @default(uuid())
+  roomId     String
+  userId     String
+  type       String // "rectangle", "circle", "line", etc.
+  startPoint Json // { x: number, y: number }
+  endPoint   Json // { x: number, y: number }
+  style      Json // { strokeColor: string, fillColor: string, strokeWidth: number, opacity: number }
+  points     Json? // For freehand drawing - array of points
+  text       String? // For text elements
+  isSelected Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  room       Room     @relation(fields: [roomId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
 }
