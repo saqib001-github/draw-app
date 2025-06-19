@@ -23,7 +23,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use("/api/users", userRouter);
-
+app.get("/health",(req,res)=>{
+  res.status(200).json({ status: "OK" });
+})
 // Error handling
 app.use(handleErrors);
 
