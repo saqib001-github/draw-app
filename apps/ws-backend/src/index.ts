@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from "ws";
 import dotenv from "dotenv";
-import jwt from "jsonwebtoken";
+import prisma from "@repo/database"
 import { parse } from "url";
 import { verifyJwtToken } from "@repo/common";
 
@@ -17,6 +17,7 @@ interface Room {
   name: string;
   clients: Map<string, AuthenticatedClient>; // userId -> client
   messages: Message[];
+  strokes: Stroke[];
 }
 
 interface Message {
@@ -26,12 +27,42 @@ interface Message {
   content: string;
   timestamp: Date;
   type: "chat" | "draw" | "system";
+  stroke?: Stroke;
+}
+
+interface Stroke {
+  id: string;
+  userId: string;
+  userName: string;
+  type: ShapeType;
+  startPoint: Point;
+  endPoint: Point;
+  style: ShapeStyle;
+  isSelected: boolean;
+  points?: Point[];
+  text?: string;
+  timestamp: Date;
 }
 
 interface User {
   id: string;
   name: string;
   email: string;
+}
+
+// Shape types from your frontend
+type ShapeType = "rectangle" | "circle" | "line" | "arrow" | "text" | "freehand";
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+interface ShapeStyle {
+  strokeColor: string;
+  fillColor: string;
+  strokeWidth: number;
+  opacity: number;
 }
 
 class WebSocketManager {
@@ -143,9 +174,10 @@ class WebSocketManager {
   private handleMessage(ws: AuthenticatedClient, data: string): void {
     try {
       const message = JSON.parse(data) as {
-        type: "join" | "leave" | "chat" | "draw";
+        type: "join" | "leave" | "chat" | "draw" | "clear";
         roomId?: string;
         content?: any;
+        stroke?: Stroke;
       };
 
       switch (message.type) {
@@ -156,9 +188,16 @@ class WebSocketManager {
           this.handleLeaveRoom(ws);
           break;
         case "chat":
-        case "draw":
-          this.handleRoomMessage(ws, message);
+          this.handleChatMessage(ws, message);
           break;
+        case "draw":
+          this.handleDrawMessage(ws, message);
+          break;
+        case "clear":
+          this.handleClearCanvas(ws);
+          break;
+        default:
+          console.warn("Unknown message type:", message.type);
       }
     } catch (error) {
       console.error("Message handling error:", error);
@@ -187,6 +226,7 @@ class WebSocketManager {
         name: `Room ${roomId}`,
         clients: new Map(),
         messages: [],
+        strokes: [],
       };
       this.rooms.set(roomId, room);
     }
@@ -208,6 +248,19 @@ class WebSocketManager {
 
     // Send room history to new user
     room.messages.forEach((msg) => this.sendToClient(ws, msg));
+    
+    // Send all existing strokes to the new user
+    room.strokes.forEach((stroke) => {
+      this.sendToClient(ws, {
+        type: "draw",
+        content: "stroke",
+        stroke: stroke,
+        userId: stroke.userId,
+        userName: stroke.userName,
+        id: stroke.id,
+        timestamp: stroke.timestamp,
+      });
+    });
   }
 
   private handleLeaveRoom(ws: AuthenticatedClient): void {
@@ -237,7 +290,7 @@ class WebSocketManager {
     ws.roomId = null;
   }
 
-  private handleRoomMessage(ws: AuthenticatedClient, message: any): void {
+  private async handleChatMessage(ws: AuthenticatedClient, message: any): Promise<void> {
     if (!ws.roomId) {
       this.sendToClient(ws, {
         type: "system",
@@ -255,7 +308,7 @@ class WebSocketManager {
 
     const formattedMessage: Message = {
       id: crypto.randomUUID(),
-      type: message.type,
+      type: "chat",
       content: message.content,
       userId: ws.userId,
       userName: ws.userName,
@@ -267,8 +320,98 @@ class WebSocketManager {
     if (room.messages.length > 100) {
       room.messages.shift(); // Keep only last 100 messages
     }
-
+    
     this.broadcastToRoom(room, formattedMessage);
+    await prisma.chat.create({
+      data:{
+        roomId: ws.roomId,
+        userId: ws.userId,
+        message: message.content,
+      }
+    })
+  }
+
+  private handleDrawMessage(ws: AuthenticatedClient, message: any): void {
+    if (!ws.roomId) {
+      this.sendToClient(ws, {
+        type: "system",
+        content: "You must join a room first",
+        userId: "system",
+        userName: "System",
+        id: crypto.randomUUID(),
+        timestamp: new Date(),
+      });
+      return;
+    }
+
+    const room = this.rooms.get(ws.roomId);
+    if (!room) return;
+
+    // Create a new stroke
+    const stroke: Stroke = {
+      id: crypto.randomUUID(),
+      userId: ws.userId,
+      userName: ws.userName,
+      type: message.stroke.type,
+      startPoint: message.stroke.startPoint,
+      endPoint: message.stroke.endPoint,
+      style: message.stroke.style,
+      isSelected: message.stroke.isSelected || false,
+      points: message.stroke.points,
+      text: message.stroke.text,
+      timestamp: new Date(),
+    };
+
+    // Store the stroke
+    room.strokes.push(stroke);
+
+    // Broadcast the stroke to all clients in the room
+    const drawMessage: Message = {
+      id: stroke.id,
+      type: "draw",
+      content: "stroke",
+      userId: ws.userId,
+      userName: ws.userName,
+      timestamp: stroke.timestamp,
+      stroke: stroke,
+    };
+
+    this.broadcastToRoom(room, drawMessage);
+    prisma.stroke.create({
+      data:{
+        roomId: ws.roomId,
+        userId: ws.userId,
+        type: stroke.type,
+        startPoint: JSON.stringify(stroke.startPoint),
+        endPoint: JSON.stringify(stroke.endPoint),
+        style: JSON.stringify(stroke.style),
+        isSelected: stroke.isSelected,
+        points: stroke.points ? JSON.stringify(stroke.points) : [],
+        text: stroke.text || null,
+      }
+    })
+  }
+
+  private handleClearCanvas(ws: AuthenticatedClient): void {
+    if (!ws.roomId) return;
+
+    const room = this.rooms.get(ws.roomId);
+    if (!room) return;
+
+    // Clear all strokes for the room
+    room.strokes = [];
+
+    // Broadcast clear command to all clients
+    const clearMessage: Message = {
+      id: crypto.randomUUID(),
+      type: "draw",
+      content: "clear",
+      userId: ws.userId,
+      userName: ws.userName,
+      timestamp: new Date(),
+    };
+
+    this.broadcastToRoom(room, clearMessage);
   }
 
   private handleDisconnection(ws: AuthenticatedClient): void {

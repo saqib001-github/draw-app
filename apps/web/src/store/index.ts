@@ -69,7 +69,7 @@ export const useStore = create<AppState>((set, get) => {
       get().setConnectionState(state);
     });
 
-    wsService.onMessage((message: WebSocketMessage) => {
+    wsService.onMessage((message) => {
       if (message.type === "chat" && message.roomId) {
         const newMessage = {
           id: message.id,
