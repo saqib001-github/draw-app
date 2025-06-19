@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
+    "./auth-form": "./src/auth-form.tsx",
+    "./Input": "./src/Input.tsx",
+    "./button": "./src/button.tsx",
     "./*": "./src/*.tsx"
   },
   "scripts": {
