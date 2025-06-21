@@ -1,6 +1,7 @@
 import React from "react";
 import { useCanvasStore } from "../store/canvas";
 import { ShapeType } from "../types/shapes";
+import { excalidrawWsService } from "@/services/socket-manager";
 
 const tools: { type: ShapeType; label: string; icon: string }[] = [
   { type: "rectangle", label: "Rectangle", icon: "⬜" },
@@ -21,7 +22,11 @@ const colors = [
   "#00ffff",
 ];
 
-export const Toolbar: React.FC = () => {
+interface ToolbarProps {
+  canvasId: string;
+}
+
+export const Toolbar: React.FC<ToolbarProps> = ({ canvasId }) => {
   const {
     currentTool,
     currentStyle,
@@ -30,8 +35,13 @@ export const Toolbar: React.FC = () => {
     clear,
     selectedShape,
     deleteShape,
+    undo,
+    redo,
   } = useCanvasStore();
-
+  const handleClear = () => {
+    clear();
+    excalidrawWsService.clearCanvas(canvasId);
+  };
   return (
     <div className="fixed left-4 top-4 bg-white p-4 rounded-lg shadow-lg space-y-4">
       <div className="space-y-2">
@@ -102,7 +112,18 @@ export const Toolbar: React.FC = () => {
         >
           Clear All
         </button>
-
+        <button
+          onClick={undo}
+          className="w-full px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400 mt-2"
+        >
+          Undo
+        </button>
+        <button
+          onClick={redo}
+          className="w-full px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400 mt-2"
+        >
+          Redo
+        </button>
         {selectedShape && (
           <button
             onClick={() => deleteShape(selectedShape.id)}
