@@ -3,67 +3,9 @@ import dotenv from "dotenv";
 import prisma from "@repo/database"
 import { parse } from "url";
 import { verifyJwtToken } from "@repo/common";
+import { AuthenticatedClient, Message, Room, Stroke, User } from "types";
 
 dotenv.config();
-
-interface AuthenticatedClient extends WebSocket {
-  userId: string;
-  userName: string;
-  roomId: string | null;
-}
-
-interface Room {
-  id: string;
-  name: string;
-  clients: Map<string, AuthenticatedClient>; // userId -> client
-  messages: Message[];
-  strokes: Stroke[];
-}
-
-interface Message {
-  id: string;
-  userId: string;
-  userName: string;
-  content: string;
-  timestamp: Date;
-  type: "chat" | "draw" | "system";
-  stroke?: Stroke;
-}
-
-interface Stroke {
-  id: string;
-  userId: string;
-  userName: string;
-  type: ShapeType;
-  startPoint: Point;
-  endPoint: Point;
-  style: ShapeStyle;
-  isSelected: boolean;
-  points?: Point[];
-  text?: string;
-  timestamp: Date;
-}
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
-
-// Shape types from your frontend
-type ShapeType = "rectangle" | "circle" | "line" | "arrow" | "text" | "freehand";
-
-interface Point {
-  x: number;
-  y: number;
-}
-
-interface ShapeStyle {
-  strokeColor: string;
-  fillColor: string;
-  strokeWidth: number;
-  opacity: number;
-}
 
 class WebSocketManager {
   private wss: WebSocketServer;
@@ -101,7 +43,7 @@ class WebSocketManager {
   }
 
   private async handleConnection(
-    ws: AuthenticatedClient,
+    ws: WebSocket & AuthenticatedClient,
     req: any
   ): Promise<void> {
     try {

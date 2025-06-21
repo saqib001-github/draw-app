@@ -12,6 +12,7 @@ interface CanvasState {
     strokeWidth: number;
     opacity: number;
   };
+  canvasId: string | null;
 
   // Actions
   setCurrentTool: (tool: ShapeType) => void;
@@ -22,6 +23,8 @@ interface CanvasState {
   setIsDrawing: (isDrawing: boolean) => void;
   updateStyle: (style: Partial<typeof initialState.currentStyle>) => void;
   clear: () => void;
+  addRemoteShape: (shape: Shape) => void;
+  clearShapes: () => void;
 }
 
 const initialState = {
@@ -35,6 +38,7 @@ const initialState = {
     strokeWidth: 2,
     opacity: 1,
   },
+  canvasId: null,
 };
 
 export const useCanvasStore = create<CanvasState>((set) => ({
@@ -69,4 +73,11 @@ export const useCanvasStore = create<CanvasState>((set) => ({
     })),
 
   clear: () => set(initialState),
+
+  addRemoteShape: (shape) =>
+    set((state) => ({
+      shapes: [...state.shapes, shape],
+    })),
+
+  clearShapes: () => set(initialState),
 }));
