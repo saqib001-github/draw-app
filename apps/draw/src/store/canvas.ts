@@ -13,6 +13,8 @@ interface CanvasState {
     opacity: number;
   };
   canvasId: string | null;
+  undoStack: Shape[][];
+  redoStack: Shape[][];
 
   // Actions
   setCurrentTool: (tool: ShapeType) => void;
@@ -25,6 +27,8 @@ interface CanvasState {
   clear: () => void;
   addRemoteShape: (shape: Shape) => void;
   clearShapes: () => void;
+  undo: () => void;
+  redo: () => void;
 }
 
 const initialState = {
@@ -39,6 +43,8 @@ const initialState = {
     opacity: 1,
   },
   canvasId: null,
+  undoStack: [],
+  redoStack: [],
 };
 
 export const useCanvasStore = create<CanvasState>((set) => ({
@@ -48,16 +54,21 @@ export const useCanvasStore = create<CanvasState>((set) => ({
 
   addShape: (shape) =>
     set((state) => ({
+      undoStack: [...state.undoStack, state.shapes],
+      redoStack: [],
       shapes: [...state.shapes, shape],
     })),
 
   updateShape: (shape) =>
     set((state) => ({
+      redoStack: [],
       shapes: state.shapes.map((s) => (s.id === shape.id ? shape : s)),
     })),
 
   deleteShape: (shapeId) =>
     set((state) => ({
+      undoStack: [...state.undoStack, state.shapes],
+      redoStack: [],
       shapes: state.shapes.filter((s) => s.id !== shapeId),
       selectedShape:
         state.selectedShape?.id === shapeId ? null : state.selectedShape,
@@ -80,4 +91,26 @@ export const useCanvasStore = create<CanvasState>((set) => ({
     })),
 
   clearShapes: () => set(initialState),
+
+  undo: () =>
+    set((state) => {
+      if (state.undoStack.length === 0) return state;
+      const prev = state.undoStack[state.undoStack.length - 1];
+      return {
+        shapes: prev,
+        undoStack: state.undoStack.slice(0, -1),
+        redoStack: [state.shapes, ...state.redoStack],
+      };
+    }),
+
+  redo: () =>
+    set((state) => {
+      if (state.redoStack.length === 0) return state;
+      const next = state.redoStack[0];
+      return {
+        shapes: next,
+        undoStack: [...state.undoStack, state.shapes],
+        redoStack: state.redoStack.slice(1),
+      };
+    }),
 }));
