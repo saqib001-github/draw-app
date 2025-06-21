@@ -76,4 +76,17 @@ export class UserController {
       status: 200,
     });
   }
+  static async getRoomShapes(req: Request, res: Response) {
+    const { roomId } = req.params;
+    if (!roomId) {
+      throw new Error("Room ID is required");
+    }
+    const shapes = await UserService.getRoomShapes(roomId);
+
+    return sendResponse(res, {
+      message: "Room shapes retrieved successfully",
+      data: shapes,
+      status: 200,
+    });
+  }
 }

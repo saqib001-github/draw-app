@@ -42,4 +42,10 @@ router.get(
   wrapAsync(UserController.getRoomChats)
 );
 
+router.get(
+  "/shapes/:roomId",
+  authenticate,
+  wrapAsync(UserController.getRoomShapes)
+);
+
 export default router;

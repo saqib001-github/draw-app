@@ -114,4 +114,23 @@ export class UserService {
 
     return chats;
   }
+  static async getRoomShapes(roomId: string) {
+    const shapes = await prisma.stroke.findMany({
+      where: { roomId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    return shapes;
+  }
 }
