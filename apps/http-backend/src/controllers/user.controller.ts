@@ -89,4 +89,15 @@ export class UserController {
       status: 200,
     });
   }
+
+  static async getUserRooms(req: Request, res: Response) {
+    const userId = req.user.id;
+    const user = await UserService.getUserProfile(userId);
+    // user.rooms is an array of rooms
+    return sendResponse(res, {
+      message: "User rooms retrieved successfully",
+      data: user.rooms,
+      status: 200,
+    });
+  }
 }
