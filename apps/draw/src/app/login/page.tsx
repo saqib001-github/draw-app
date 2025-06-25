@@ -6,26 +6,25 @@ import { AuthForm } from "@repo/ui/auth-form";
 import { useAuthStore } from "@/store/auth";
 import { api } from "@/services/api";
 
-export default function SignupPage() {
+export default function LoginPage() {
   const router = useRouter();
   const setUser = useAuthStore((state) => state.setUser);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSignup = async ({
+  const handleLogin = async ({
     email,
     password,
-    name,
   }: {
     email: string;
     password: string;
-    name?: string;
   }) => {
     setLoading(true);
     setError("");
 
     try {
-      const data = await api.signup(email, password, name || "");
+      const data = await api.login(email, password);
+      console.log(data)
       setUser({
         id: data.data.user.id,
         email: data.data.user.email,
@@ -44,12 +43,12 @@ export default function SignupPage() {
       <div className="max-w-md w-full space-y-8 p-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
+            Sign in to your account
           </h2>
         </div>
         <AuthForm
-          type="signup"
-          onSubmit={handleSignup}
+          type="login"
+          onSubmit={handleLogin}
           loading={loading}
           error={error}
         />

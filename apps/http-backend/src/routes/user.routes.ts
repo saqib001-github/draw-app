@@ -48,4 +48,6 @@ router.get(
   wrapAsync(UserController.getRoomShapes)
 );
 
+router.get("/rooms", authenticate, wrapAsync(UserController.getUserRooms));
+
 export default router;
