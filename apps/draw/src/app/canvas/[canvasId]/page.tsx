@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import { Canvas } from "../../../components/Canvas";
 import { Toolbar } from "../../../components/Toolbar";
 import { excalidrawWsService } from "@/services/socket-manager";
+import { useAuthStore } from "@/store/auth";
 
 interface CanvasPageProps {
   params: {
@@ -13,9 +14,11 @@ interface CanvasPageProps {
 
 const CanvasPage =({ params }: any) => {
   const { canvasId }:any = React.use(params);
+    const { user } = useAuthStore();
+  
   useEffect(() => {
     // Initialize WebSocket connection when component mounts
-    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjhlNzRiYWJlLTA4ZjMtNGI0Ni1iOWEwLWRiOWM3Yjc2MjRkZiIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsIm5hbWUiOiJUZXN0IFVzZXIiLCJpYXQiOjE3NTA0NDE1NTAsImV4cCI6MTc1MDUyNzk1MH0.B_b6I4siNwjbT11nECkc_xyYELWXYjV0mCi4CmbSN8w" // Or your auth token retrieval method
+    const token = user?.token;
     if (token) {
       excalidrawWsService.connect(token);
       excalidrawWsService.joinRoom(canvasId);
