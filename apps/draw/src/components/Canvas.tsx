@@ -3,13 +3,17 @@ import React, { useEffect, useRef, MouseEvent, useCallback } from "react";
 import { useCanvasStore } from "../store/canvas";
 import { renderShape } from "../utils/shapes";
 import { nanoid } from "nanoid";
-import { Point, Shape } from "../types/shapes";
+import { Point, Shape, ShapeType } from "../types/shapes";
 import { excalidrawWsService } from "../services/socket-manager";
+import { useAuthStore } from "../store/auth";
+import { api } from "../services/api";
+
 interface CanvasProps {
   canvasId: string;
 }
 
 export const Canvas: React.FC<CanvasProps> = ({ canvasId }) => {
+  const { user } = useAuthStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const {
     shapes,
@@ -76,6 +80,41 @@ export const Canvas: React.FC<CanvasProps> = ({ canvasId }) => {
       unsubscribe();
     };
   }, [shapes, canvasId, addRemoteShape, clearShapes]);
+
+  // Load existing strokes when joining a room
+  useEffect(() => {
+    const loadExistingStrokes = async () => {
+      if (!user?.token || !canvasId) return;
+
+      try {
+        const data = await api.getRoomStrokes(canvasId, user.token);
+        // Convert stored strokes to Shape format and add them to canvas
+        data.data.forEach((stroke: any) => {
+          const shape: Shape = {
+            id: stroke.id,
+            type: stroke.type as ShapeType,
+            startPoint: JSON.parse(stroke.startPoint),
+            endPoint: JSON.parse(stroke.endPoint),
+            style: JSON.parse(stroke.style),
+            isSelected: false,
+            points: stroke.points ? JSON.parse(stroke.points) : undefined,
+          };
+          addRemoteShape(shape);
+        });
+      } catch (error) {
+        console.error("Failed to load room strokes:", error);
+      }
+    };
+
+    loadExistingStrokes();
+  }, [canvasId, user?.token, addRemoteShape]);
+
+  // Ensure user is authenticated
+  useEffect(() => {
+    if (!user?.token) {
+      window.location.href = "/login";
+    }
+  }, [user]);
 
   const getMousePosition = (event: MouseEvent): Point => {
     if (!canvasRef.current) return { x: 0, y: 0 };
