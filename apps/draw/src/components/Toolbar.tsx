@@ -4,12 +4,12 @@ import { ShapeType } from "../types/shapes";
 import { excalidrawWsService } from "@/services/socket-manager";
 
 const tools: { type: ShapeType; label: string; icon: string }[] = [
-  { type: "rectangle", label: "Rectangle", icon: "⬜" },
-  { type: "circle", label: "Circle", icon: "⭕" },
-  { type: "line", label: "Line", icon: "➖" },
-  { type: "arrow", label: "Arrow", icon: "➡️" },
+  { type: "rectangle", label: "Rectangle", icon: "□" },
+  { type: "circle", label: "Circle", icon: "○" },
+  { type: "line", label: "Line", icon: "―" },
+  { type: "arrow", label: "Arrow", icon: "→" },
   { type: "text", label: "Text", icon: "T" },
-  { type: "freehand", label: "Freehand", icon: "✏️" },
+  { type: "freehand", label: "Freehand", icon: "✎" },
 ];
 
 const colors = [
@@ -38,23 +38,24 @@ export const Toolbar: React.FC<ToolbarProps> = ({ canvasId }) => {
     undo,
     redo,
   } = useCanvasStore();
+  
   const handleClear = () => {
     clear();
     excalidrawWsService.clearCanvas(canvasId);
   };
+
   return (
-    <div className="fixed left-4 top-4 bg-white p-4 rounded-lg shadow-lg space-y-4">
+    <div className="fixed left-4 top-4 bg-white p-3 rounded-lg shadow-md border border-gray-200 space-y-3">
       <div className="space-y-2">
-        <h3 className="font-bold">Tools</h3>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1">
           {tools.map((tool) => (
             <button
               key={tool.type}
               onClick={() => setCurrentTool(tool.type)}
-              className={`p-2 rounded ${
+              className={`p-2 rounded text-lg flex items-center justify-center w-8 h-8 ${
                 currentTool === tool.type
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-100"
+                  ? "bg-blue-100 text-blue-600"
+                  : "hover:bg-gray-100"
               }`}
               title={tool.label}
             >
@@ -64,14 +65,17 @@ export const Toolbar: React.FC<ToolbarProps> = ({ canvasId }) => {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <h3 className="font-bold">Colors</h3>
-        <div className="grid grid-cols-4 gap-2">
+      <div className="border-t border-gray-200 pt-2 space-y-2">
+        <div className="grid grid-cols-4 gap-1">
           {colors.map((color) => (
             <button
               key={color}
               onClick={() => updateStyle({ strokeColor: color })}
-              className="w-6 h-6 rounded-full border border-gray-300"
+              className={`w-6 h-6 rounded border-2 ${
+                currentStyle.strokeColor === color 
+                  ? "border-blue-500 ring-1 ring-blue-200"
+                  : "border-gray-200 hover:border-gray-300"
+              }`}
               style={{ backgroundColor: color }}
               title={color}
             />
@@ -79,20 +83,20 @@ export const Toolbar: React.FC<ToolbarProps> = ({ canvasId }) => {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <h3 className="font-bold">Stroke Width</h3>
+      <div className="border-t border-gray-200 pt-2 space-y-1">
+        <div className="text-xs text-gray-500 mb-1">Stroke</div>
         <input
           type="range"
           min="1"
           max="20"
           value={currentStyle.strokeWidth}
           onChange={(e) => updateStyle({ strokeWidth: Number(e.target.value) })}
-          className="w-full"
+          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
         />
       </div>
 
-      <div className="space-y-2">
-        <h3 className="font-bold">Opacity</h3>
+      <div className="border-t border-gray-200 pt-2 space-y-1">
+        <div className="text-xs text-gray-500 mb-1">Opacity</div>
         <input
           type="range"
           min="0"
@@ -101,37 +105,40 @@ export const Toolbar: React.FC<ToolbarProps> = ({ canvasId }) => {
           onChange={(e) =>
             updateStyle({ opacity: Number(e.target.value) / 100 })
           }
-          className="w-full"
+          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
         />
       </div>
 
-      <div className="space-y-2">
-        <button
-          onClick={() => clear()}
-          className="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-        >
-          Clear All
-        </button>
+      <div className="border-t border-gray-200 pt-2 space-y-2">
         <button
           onClick={undo}
-          className="w-full px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400 mt-2"
+          className="w-full px-2 py-1.5 text-sm bg-white border border-gray-200 rounded hover:bg-gray-50 flex items-center justify-center"
+          title="Undo"
         >
           Undo
         </button>
         <button
           onClick={redo}
-          className="w-full px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400 mt-2"
+          className="w-full px-2 py-1.5 text-sm bg-white border border-gray-200 rounded hover:bg-gray-50 flex items-center justify-center"
+          title="Redo"
         >
           Redo
         </button>
         {selectedShape && (
           <button
             onClick={() => deleteShape(selectedShape.id)}
-            className="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            className="w-full px-2 py-1.5 text-sm bg-white border border-red-200 text-red-600 rounded hover:bg-red-50 flex items-center justify-center"
+            title="Delete selected"
           >
-            Delete Selected
+            Delete
           </button>
         )}
+        <button
+          onClick={handleClear}
+          className="w-full px-2 py-1.5 text-sm bg-white border border-red-200 text-red-600 rounded hover:bg-red-50 flex items-center justify-center"
+          >
+            Clear
+          </button>
       </div>
     </div>
   );
