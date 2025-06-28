@@ -52,7 +52,7 @@ export const api = {
   },
 
   createRoom: async (name: string, token: string, description?: string) => {
-    const response = await fetch(`${API_URL}/rooms`, {
+    const response = await fetch(`${API_URL}/room`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -69,7 +69,7 @@ export const api = {
 
   // Get room's existing strokes
   getRoomStrokes: async (roomId: string, token: string) => {
-    const response = await fetch(`${API_URL}/rooms/${roomId}/strokes`, {
+    const response = await fetch(`${API_URL}/shapes/${roomId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
