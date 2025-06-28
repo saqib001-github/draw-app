@@ -32,6 +32,7 @@ export const Canvas: React.FC<CanvasProps> = ({ canvasId }) => {
   } = useCanvasStore();
 
   const pointsRef = useRef<Point[]>([]);
+  const currentShapeIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -55,7 +56,6 @@ export const Canvas: React.FC<CanvasProps> = ({ canvasId }) => {
     const unsubscribe = excalidrawWsService.onMessage((message) => {
       if (message.type === "draw") {
         if (message.content === "stroke" && message.stroke) {
-          // Convert the stroke to our local shape format
           const shape: Shape = {
             id: message.stroke.id,
             type: message.stroke.type,
@@ -88,7 +88,7 @@ export const Canvas: React.FC<CanvasProps> = ({ canvasId }) => {
 
       try {
         const data = await api.getRoomStrokes(canvasId, user.token);
-        // Convert stored strokes to Shape format and add them to canvas
+        clearShapes(); // Clear before loading to avoid duplicates
         data.data.forEach((stroke: any) => {
           const shape: Shape = {
             id: stroke.id,
@@ -107,7 +107,7 @@ export const Canvas: React.FC<CanvasProps> = ({ canvasId }) => {
     };
 
     loadExistingStrokes();
-  }, [canvasId, user?.token, addRemoteShape]);
+  }, [canvasId, user?.token, addRemoteShape, clearShapes]);
 
   // Ensure user is authenticated
   useEffect(() => {
@@ -127,15 +127,12 @@ export const Canvas: React.FC<CanvasProps> = ({ canvasId }) => {
   };
 
   const handleMouseDown = (event: MouseEvent) => {
-    if (isDrawing) return; // Prevent multiple shapes on rapid mousedown
+    if (isDrawing) return;
     const startPoint = getMousePosition(event);
     setIsDrawing(true);
 
-    if (currentTool === "freehand") {
-      pointsRef.current = [startPoint];
-    }
+    pointsRef.current = [startPoint];
 
-    // Create a new shape only on mouse down
     const newShape: Shape = {
       id: nanoid(),
       type: currentTool,
@@ -146,64 +143,56 @@ export const Canvas: React.FC<CanvasProps> = ({ canvasId }) => {
       points: currentTool === "freehand" ? [startPoint] : undefined,
     };
 
+    currentShapeIdRef.current = newShape.id;
     addShape(newShape);
   };
 
-  // Throttle updateShape to 1 per 16ms (about 60fps)
-  const lastUpdateRef = useRef<number>(0);
-  const throttledUpdateShape = useCallback(
-    (updatedShape: Shape) => {
-      const now = Date.now();
-      if (now - lastUpdateRef.current > 16) {
-        updateShape(updatedShape);
-        lastUpdateRef.current = now;
-      }
-    },
-    [updateShape]
-  );
-
   const handleMouseMove = (event: MouseEvent) => {
-    if (!isDrawing) return;
-    if (shapes.length === 0) return;
+    if (!isDrawing || !currentShapeIdRef.current) return;
 
     const currentPoint = getMousePosition(event);
-    const lastShape = shapes[shapes.length - 1];
+    const currentShape = shapes.find(shape => shape.id === currentShapeIdRef.current);
+    if (!currentShape) return;
 
     if (currentTool === "freehand") {
       pointsRef.current.push(currentPoint);
       const updatedShape = {
-        ...lastShape,
+        ...currentShape,
         points: [...pointsRef.current],
+        endPoint: currentPoint
       };
-      throttledUpdateShape(updatedShape);
+      updateShape(updatedShape);
     } else {
       const updatedShape = {
-        ...lastShape,
-        endPoint: currentPoint,
+        ...currentShape,
+        endPoint: currentPoint
       };
-      throttledUpdateShape(updatedShape);
+      updateShape(updatedShape);
     }
   };
 
   const handleMouseUp = () => {
-    if (!isDrawing) return;
-    if (shapes.length === 0) return;
-    const lastShape = shapes[shapes.length - 1];
-    // Send the final shape to server only once when drawing is complete
-    excalidrawWsService.sendStroke(canvasId, {
-      id: lastShape.id,
-      userId: "current-user-id",
-      userName: "Current User",
-      type: lastShape.type,
-      startPoint: lastShape.startPoint,
-      endPoint: lastShape.endPoint,
-      style: lastShape.style,
-      isSelected: false,
-      points: lastShape.points,
-      timestamp: new Date(),
-    });
+    if (!isDrawing || !currentShapeIdRef.current) return;
+    
+    const currentShape = shapes.find(shape => shape.id === currentShapeIdRef.current);
+    if (currentShape) {
+      excalidrawWsService.sendStroke(canvasId, {
+        id: currentShape.id,
+        userId: user?.id || "unknown-user",
+        userName: user?.email || "Unknown User",
+        type: currentShape.type,
+        startPoint: currentShape.startPoint,
+        endPoint: currentShape.endPoint,
+        style: currentShape.style,
+        isSelected: false,
+        points: currentShape.points,
+        timestamp: new Date(),
+      });
+    }
+    
     setIsDrawing(false);
     pointsRef.current = [];
+    currentShapeIdRef.current = null;
   };
 
   const handleClick = (event: MouseEvent) => {
