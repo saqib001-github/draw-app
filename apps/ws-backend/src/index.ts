@@ -319,19 +319,20 @@ class WebSocketManager {
     };
 
     this.broadcastToRoom(room, drawMessage);
-    prisma.stroke.create({
-      data:{
-        roomId: ws.roomId,
-        userId: ws.userId,
-        type: stroke.type,
-        startPoint: JSON.stringify(stroke.startPoint),
-        endPoint: JSON.stringify(stroke.endPoint),
-        style: JSON.stringify(stroke.style),
-        isSelected: stroke.isSelected,
-        points: stroke.points ? JSON.stringify(stroke.points) : [],
-        text: stroke.text || null,
-      }
-    })
+    // Removed prisma.stroke.create to avoid storing shapes in the database as per user request
+    // prisma.stroke.create({
+    //   data:{
+    //     roomId: ws.roomId,
+    //     userId: ws.userId,
+    //     type: stroke.type,
+    //     startPoint: JSON.stringify(stroke.startPoint),
+    //     endPoint: JSON.stringify(stroke.endPoint),
+    //     style: JSON.stringify(stroke.style),
+    //     isSelected: stroke.isSelected,
+    //     points: stroke.points ? JSON.stringify(stroke.points) : [],
+    //     text: stroke.text || null,
+    //   }
+    // })
   }
 
   private handleClearCanvas(ws: AuthenticatedClient): void {
