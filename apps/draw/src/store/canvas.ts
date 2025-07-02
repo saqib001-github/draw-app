@@ -29,6 +29,12 @@ interface CanvasState {
   clearShapes: () => void;
   undo: () => void;
   redo: () => void;
+  setCurrentStyle: (style: {
+    strokeColor: string;
+    fillColor: string;
+    strokeWidth: number;
+    opacity: number;
+  }) => void;
 }
 
 const initialState = {
@@ -113,4 +119,9 @@ export const useCanvasStore = create<CanvasState>((set) => ({
         redoStack: state.redoStack.slice(1),
       };
     }),
+
+  setCurrentStyle: (style) =>
+    set((state) => ({
+      currentStyle: { ...state.currentStyle, ...style },
+    })),
 }));
