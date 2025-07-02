@@ -1,23 +1,37 @@
-"use client";
+import { useState } from "react";
+import SignupPage from "./SignUpPage";
+import LoginPage from "./LoginPage";
 
-export function AuthPage({isSignin}: {
-    isSignin: boolean
-}) {
-    return <div className="w-screen h-screen flex justify-center items-center">
-        <div className="p-6 m-2 bg-white rounded">
-            <div className="p-2">
-                <input type="text" placeholder="Email"></input>
-            </div>
-            <div className="p-2">
-                
-            </div>
+// Demo component to show both pages
+export default function AuthPages() {
+  const [currentPage, setCurrentPage] = useState("login");
 
-            <div className="pt-2">
-                <button className="bg-red-200 rounded p-2" onClick={() => {
+  return (
+    <div className="bg-background text-foreground">
+      <div className="fixed top-4 right-4 z-50 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-1 shadow-sm">
+        <button
+          onClick={() => setCurrentPage("login")}
+          className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+            currentPage === "login"
+              ? "bg-foreground text-background"
+              : "hover:bg-gray-100 dark:hover:bg-gray-700"
+          }`}
+        >
+          Login
+        </button>
+        <button
+          onClick={() => setCurrentPage("signup")}
+          className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+            currentPage === "signup"
+              ? "bg-foreground text-background"
+              : "hover:bg-gray-100 dark:hover:bg-gray-700"
+          }`}
+        >
+          Signup
+        </button>
+      </div>
 
-                }}>{isSignin ? "Sign in" : "Sign up"}</button>
-            </div>
-        </div>
+      {currentPage === "login" ? <LoginPage /> : <SignupPage />}
     </div>
-
+  );
 }
